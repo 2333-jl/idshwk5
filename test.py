@@ -1,70 +1,75 @@
 from sklearn.ensemble import RandomForestClassifier
-import numpy as np
+import numpy as mp
 
-traindata=[]
-testdata={}
+trainlist = []
+testlist = []
 class Domain:
-    def __init__(self,_name,_label,_length,numm):
-        self.name=_name
-        self.label=_label
-        self.length=_length
-        self.numm=numm
+    def __init__(self, _name, _label, _length, _number):
+        self.name = _name
+        self.label = _label
+        self.length = _length
+        self.number = _number
 
-    def returndata(self):
-        return [self.length,self.numm]
+    def returnData(self):
+        return [self.length, self.number]
 
-    def returnlabel(self):
-        if self.label=="dga":
-            return 1
-        else:
+    def returnLabel(self):
+        if self.label == "notdga":
             return 0
+        else:
+            return 1
 
-def init_Data(filename):
+def countNumbers(str):
+    num = 0
+    for i in str:
+        if i.isdigit():
+            num = num + 1
+    return num
+
+
+def initTrain(filename):
     with open(filename) as f:
         for line in f:
-            line=line.strip()
-            if line.startswith("#") or line=="":
+            line = line.strip()
+            if line.startswith("#") or line == "":
                 continue
-            tokens=line.split(",")
-            name=tokens[0]
-            label=tokens[1]
-            length=len(name)
-            countnum=0
-            for i in name:
-                if i.isdigit():
-                    numm+=1
-            traindata.append(Domain(name,label,length,numm))
+            tokens = line.split(',')
+            name = tokens[0]
+            label = tokens[1]
+            length = len(tokens[0])
+            number = countNumbers(tokens[0])
+            trainlist.append(Domain(name, label, length, number))
 
-def init_test(filename):
-    with open(filename) as m:
-        for line in m:
-            length=len(line)
-            numm=0
-            for j in line:
-                if j.isdigit():
-                   numm+=1
-            testdata[line]=[length,numm]
+def initTest(filename):
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("#") or line == "":
+                continue
+            name = str(line)
+            length = len(line)
+            number = countNumbers(line)
+            testlist.append(Domain(name, "", length, number))
 
 def main():
-    init_Data("train.txt")
-    init_test("test.txt")
-    trainmatrix=[]
-    labellist=[]
-    for item in traindata:
-        trainmatrix.append(item.returndata())
-        labellist.append(item.returnlabel())
+    initTrain("train.txt")
+    initTest("test.txt")
+    featureMatrix = []
+    labelList = []
+    for item in trainlist:
+        featureMatrix.append(item.returnData())
+        labelList.append(item.returnLabel())
 
-    clf=RandomForestClassifier(random_state=0)
-    clf.fit(trainmatrix,labellist)
-    doc=open("result.txt","w")
-    for item2 in testdata.items():
-        temp=clf.predict([item2[1]])
-        if temp==1:
-            label='dga'
-        else:
-            label='notdga'
-        print(item2[0][:-1],label,sep=',',file=doc)
-    doc.close()
+    clf = RandomForestClassifier(random_state=0)
+    clf.fit(featureMatrix, labelList)
+    with open("result.txt", 'w') as f:
+        for i in testlist:
+            if clf.predict([i.returnData()])[0] == 0:
+                f.write(i.name+",notdga\n")
+            else:
+                f.write(i.name + ",dga\n")
 
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     main()
